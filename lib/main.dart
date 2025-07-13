@@ -1,25 +1,23 @@
+// main.dart
 import 'package:flutter/material.dart';
+import 'pages/home_page.dart'; // HomePage 파일 import
 
 void main() {
   runApp(MyApp());
 }
 
+/// 앱 진입 위젯
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Emulator Test',
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('에뮬레이터 연동 확인'),
-        ),
-        body: Center(
-          child: Text(
-            '에뮬레이터 연결 성공!',
-            style: TextStyle(fontSize: 24),
-          ),
-        ),
+      title: '기차 예매',
+      theme: ThemeData(
+        primarySwatch: Colors.purple,
+        scaffoldBackgroundColor: Colors.grey[200], // 기본 배경색 설정
       ),
+      debugShowCheckedModeBanner: false,
+      home: HomePage(), // 첫 화면으로 HomePage 연결
     );
   }
 }
