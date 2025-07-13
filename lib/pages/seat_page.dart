@@ -22,7 +22,8 @@ class _SeatPageState extends State<SeatPage> {
   String? selectedSeat;
 
     // <#4 UI수정> 좌석 열 라벨 (A~D)
-  final List<String> columns = ['A', 'B', 'C', 'D'];
+  final List<String> leftColumns = ['A', 'B'];   // <#6 UI수정>
+  final List<String> rightColumns = ['C', 'D'];  // <#6 UI수정>
   final int numRows = 10; // 10행
 
   @override
@@ -59,74 +60,70 @@ class _SeatPageState extends State<SeatPage> {
                 _seatLegend(Colors.grey[300]!, '선택 안 됨'),
               ],
             ),
+            SizedBox(height: 10),
 
-            // <#3> 좌석 3x3 => <#4UI수정> 좌석 배치 (4열 10행)
+
+            // <이슈1> 열 라벨 표시 (A B   C D)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                ...leftColumns.map((col) => SizedBox(
+                      width: 60,
+                      child: Center(
+                        child: Text(col,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                    )),
+                SizedBox(width: 30),
+                ...rightColumns.map((col) => SizedBox(
+                      width: 60,
+                      child: Center(
+                        child: Text(col,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                    )),
+              ],
+            ),
+            SizedBox(height: 8), //라벨 아래 여백
+
+            // <#6 UI수정> 좌석 표
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
-                  children: List.generate(numRows + 1, (rowIdx) {
-                    if (rowIdx == 0) {
-                      // <#4UI수정> 열 라벨 표시 (A~D)
-                      return Row(
+                  children: List.generate(numRows, (rowIdx) {
+                    int rowNum = rowIdx + 1;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: columns
-                            .map((col) => SizedBox(
-                                  width: 60,
-                                  child: Center(
-                                    child: Text(col,
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16)),
-                                  ),
-                                ))
-                            .toList(),
-                      );
-                    }
+                        children: [
+                          // 왼쪽 열 (A, B)
+                          ...leftColumns.map((col) => _buildSeat(col,rowNum)),
 
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: List.generate(columns.length, (colIdx) {
-                        String seatNum = '${rowIdx}-${columns[colIdx]}';
-                        bool isSelected = selectedSeat == seatNum;
-
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedSeat = seatNum;
-                            });
-                          },
-                          child: Container(
-                            margin: EdgeInsets.symmetric(vertical: 6),
-                            width: 60,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? Colors.purple
-                                  : Colors.grey[300],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                          // 행 번호(중앙)
+                          SizedBox(
+                            width: 30,
                             child: Center(
                               child: Text(
-                                seatNum,
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
+                                '$rowNum',
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
-                        );
-                      }),
+
+                          // 오른쪽 열 (C, D)
+                          ...rightColumns.map((col) => _buildSeat(col,rowNum)),
+                        ],
+                      ),
                     );
                   }),
                 ),
               ),
             ),
 
-            // <#4UI수정> 하단 고정 버튼
+            // <#6 UI수정> 하단 예매 버튼
             Padding(
               padding: const EdgeInsets.only(top: 10.0),
               child: SizedBox(
@@ -134,7 +131,6 @@ class _SeatPageState extends State<SeatPage> {
                 child: ElevatedButton(
                   onPressed: selectedSeat != null
                       ? () {
-                          // 예매 확인 다이얼로그
                           showDialog(
                             context: context,
                             builder: (_) => AlertDialog(
@@ -143,11 +139,12 @@ class _SeatPageState extends State<SeatPage> {
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: Text('취소'),
+                                  child: Text('취소',                                      style: TextStyle(
+                                          color: Colors.grey[800]
+                                  ))
                                 ),
                                 TextButton(
                                   onPressed: () {
-                                    // <#4> 예매 정보 저장
                                     TicketStore().addTicket(
                                       Ticket(
                                         departure: widget.departure,
@@ -155,20 +152,18 @@ class _SeatPageState extends State<SeatPage> {
                                         seat: selectedSeat!,
                                       ),
                                     );
-                                    Navigator.popUntil(
-                                        context, (route) => route.isFirst);
+                                    Navigator.popUntil(context, (route) => route.isFirst);
                                   },
                                   child: Text('확인'),
-                                )
+                                ),
                               ],
                             ),
                           );
                         }
-                      : null, // 좌석 선택 안 했으면 비활성화
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purple,
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 30, vertical: 16),
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -186,15 +181,47 @@ class _SeatPageState extends State<SeatPage> {
     );
   }
 
-  // <#4UI수정> 좌석 상태 안내 위젯
+  // <#6 UI수정> 좌석 박스
+  Widget _buildSeat(String col, int rowNum) {
+    String seatId = '$rowNum$col'; // 예: 1A, 2B
+    bool isSelected = selectedSeat == seatId; //<#7 UI수정 비교 대상 seatNum → seatId 로 수정>
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedSeat = seatId;
+        });
+      },
+      child: Container(
+        width: 60,
+        height: 40,
+        margin: EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.purple : Colors.grey[300],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            seatId,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.blueGrey, // <#8 UI수정>
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // <#6 UI수정> 좌석 상태 안내
   Widget _seatLegend(Color color, String label) {
     return Row(
       children: [
         Container(
           width: 16,
           height: 16,
-          decoration: BoxDecoration(
-              color: color, borderRadius: BorderRadius.circular(4)),
+          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
         ),
         SizedBox(width: 4),
         Text(label),
