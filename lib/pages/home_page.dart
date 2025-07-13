@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'station_list_page.dart'; // <#1> 역 선택 페이지 import
 import 'seat_page.dart'; // <#2> 좌석 페이지 import
+import '../data/ticket_store.dart'; //<#3> 예매 내역 저장소 import
 
 class HomePage extends StatefulWidget {
   @override
@@ -31,6 +32,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.center, // <수정#3> 가운데 정렬 유지
           children: [
             SizedBox(height: 20), // <수정#1> 여유 공간 추가, <수정#4> 20변경
+            
             // 출발/도착역을 감싸는 박스
             Container(
               // height: 200, <수정#5> 고정 높이 지워보기 값은 유지
@@ -138,7 +140,9 @@ class _HomePageState extends State<HomePage> {
                       arrival: selectedArrival!,
                     ),
                   ),
-                );
+                ).then((_) {
+                    setState(() {}); // <#3> 예매 내역 갱신을 위해 돌아왔을 때 setstate 호출
+                  });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,
@@ -157,9 +161,35 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               SizedBox(height: 40), // 하단 여백
+
+              // <#3> 예매 내역 리스트 보여주기
+              if (TicketStore().tickets.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '예매 내역',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    ListView.builder(
+                      shrinkWrap: true, // <#3> Column 안에서 ListView 사용 시 필요
+                      physics: NeverScrollableScrollPhysics(), // <#3> ScrollView 중첩 방지
+                      itemCount: TicketStore().tickets.length,
+                      itemBuilder: (context, index) {
+                        final ticket = TicketStore().tickets[index];
+                        return ListTile(
+                          leading: Icon(Icons.train),
+                          title: Text('${ticket.departure} → ${ticket.arrival}'),
+                          subtitle: Text('좌석: ${ticket.seat}'),
+                        );
+                      },
+                    ),
+                  ],
+                ),
             ],
           ),
-        ), // <== <수정#2> SingleChildScrollView 닫기
+        ),//<수정#2> SingleChildScrollView
       ),
     );
   }
