@@ -42,8 +42,10 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center, // <수정#7> 중앙 정렬
+              //<#4 UI수정>
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // 출발역
                   GestureDetector(
@@ -62,7 +64,7 @@ class _HomePageState extends State<HomePage> {
                       }
                     },
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center, // <수정#7> 중앙 정렬
+                      // 삭제 crossAxisAlignment: CrossAxisAlignment.center, // <수정#7> 중앙 정렬
                       children: [
                         Text('출발역',
                             style: TextStyle(
@@ -77,11 +79,11 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 20), // 출발-도착 사이 세로 선 대체 간격
+                  //삭제 SizedBox(height: 20), // 출발-도착 사이 세로 선 대체 간격
                   Container(
-                    width: 2,
+                    width: 1,
                     height: 50,
-                    color: Colors.grey[400],
+                    color: Colors.grey[300],//숫자 변경
                   ),
                   SizedBox(height: 20),
                   // 도착역
@@ -101,7 +103,7 @@ class _HomePageState extends State<HomePage> {
                       }
                     },
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center, // <수정#7> 중앙 정렬
+                      //삭제 crossAxisAlignment: CrossAxisAlignment.center, // <수정#7> 중앙 정렬
                       children: [
                         Text('도착역',
                             style: TextStyle(
@@ -120,6 +122,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(height: 40), // 박스와 버튼 사이 간격 <수정#7> 20->40 변경
+            
             // 좌석 선택 버튼
             ElevatedButton(
               onPressed: () {

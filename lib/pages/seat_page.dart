@@ -16,10 +16,14 @@ class SeatPage extends StatefulWidget {
 
 class _SeatPageState extends State<SeatPage> {
   // 선택된 좌석들을 저장할 Set
-  Set<String> selectedSeats = {};
+  //삭제 Set<String> selectedSeats = {};
 
   // 선택된 좌석 하나 (단일 선택용)
   String? selectedSeat;
+
+    // <#4 UI수정> 좌석 열 라벨 (A~D)
+  final List<String> columns = ['A', 'B', 'C', 'D'];
+  final int numRows = 10; // 10행
 
   @override
   Widget build(BuildContext context) {
@@ -33,117 +37,168 @@ class _SeatPageState extends State<SeatPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 출발역 -> 도착역 표시
-            Text(
-              '출발역: ${widget.departure}',
-              style: TextStyle(fontSize: 18),
+            // <#4 UI수정> 상단 출발역 → 도착역 표시
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(widget.departure,
+                    style: TextStyle(fontSize: 20, color: Colors.purple, fontWeight: FontWeight.bold)),
+                SizedBox(width: 8),
+                Icon(Icons.arrow_forward, size: 20, color: Colors.grey),
+                SizedBox(width: 8),
+                Text(widget.arrival,
+                    style: TextStyle(fontSize: 20, color: Colors.purple, fontWeight: FontWeight.bold)),
+              ],
             ),
-            Text(
-              '도착역: ${widget.arrival}',
-              style: TextStyle(fontSize: 18),
+            SizedBox(height: 16), //쉼표 누락 수정
+            Row(// <#4 UI수정> 좌석 상태 안내
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _seatLegend(Colors.purple, '선택됨'),
+                SizedBox(width: 10),
+                _seatLegend(Colors.grey[300]!, '선택 안 됨'),
+              ],
             ),
-            SizedBox(height: 20),
 
-            // <#3> 좌석 선택 영역
-            Text(
-              '좌석을 선택하세요',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-
-            // <#3> 좌석 3x3
+            // <#3> 좌석 3x3 => <#4UI수정> 좌석 배치 (4열 10행)
             Expanded(
-              child: GridView.builder(
-                itemCount: 9, // 좌석 9개
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3, // 3열
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                ),
-                itemBuilder: (context, index) {
-                  String seatNumber = 'A${index + 1}';
-                  bool isSelected = selectedSeat == seatNumber;
+              child: SingleChildScrollView(
+                child: Column(
+                  children: List.generate(numRows + 1, (rowIdx) {
+                    if (rowIdx == 0) {
+                      // <#4UI수정> 열 라벨 표시 (A~D)
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: columns
+                            .map((col) => SizedBox(
+                                  width: 60,
+                                  child: Center(
+                                    child: Text(col,
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16)),
+                                  ),
+                                ))
+                            .toList(),
+                      );
+                    }
 
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedSeat = seatNumber; //좌석 선택 저장
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.purple : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          seatNumber,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.bold,
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: List.generate(columns.length, (colIdx) {
+                        String seatNum = '${rowIdx}-${columns[colIdx]}';
+                        bool isSelected = selectedSeat == seatNum;
+
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedSeat = seatNum;
+                            });
+                          },
+                          child: Container(
+                            margin: EdgeInsets.symmetric(vertical: 6),
+                            width: 60,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Colors.purple
+                                  : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: Text(
+                                seatNum,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+                        );
+                      }),
+                    );
+                  }),
+                ),
               ),
             ),
 
-            // <추가4> 선택된 좌석과 예매 완료 버튼
-            if (selectedSeat != null) ...[
-              Text('선택된 좌석: $selectedSeat'),
-              SizedBox(height: 10),
-              Center(
+            // <#4UI수정> 하단 고정 버튼
+            Padding(
+              padding: const EdgeInsets.only(top: 10.0),
+              child: SizedBox(
+                width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // <#4> 예매 정보 저장
-                    TicketStore().addTicket(
-                      Ticket(
-                        departure: widget.departure,
-                        arrival: widget.arrival,
-                        seat: selectedSeat!,
-                      ),
-                    );
-
-                    // 예매 완료 처리
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: Text('예매 완료'),
-                        content: Text(
-                          '${widget.departure} → ${widget.arrival}\n좌석: $selectedSeat',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.popUntil(
-                              context,
-                              (route) => route.isFirst,
+                  onPressed: selectedSeat != null
+                      ? () {
+                          // 예매 확인 다이얼로그
+                          showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: Text('예매 하시겠습니까?'),
+                              content: Text('좌석: $selectedSeat'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text('취소'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    // <#4> 예매 정보 저장
+                                    TicketStore().addTicket(
+                                      Ticket(
+                                        departure: widget.departure,
+                                        arrival: widget.arrival,
+                                        seat: selectedSeat!,
+                                      ),
+                                    );
+                                    Navigator.popUntil(
+                                        context, (route) => route.isFirst);
+                                  },
+                                  child: Text('확인'),
+                                )
+                              ],
                             ),
-                            child: Text('확인'),
-                          )
-                        ],
-                      ),
-                    );
-                  },
+                          );
+                        }
+                      : null, // 좌석 선택 안 했으면 비활성화
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purple,
                     padding:
-                        EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+                        EdgeInsets.symmetric(horizontal: 30, vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                   child: Text(
-                    '예매 완료',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+                    '예매 하기',
+                    style: TextStyle(color: Colors.white, fontSize: 18),
                   ),
                 ),
               ),
-            ],
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  // <#4UI수정> 좌석 상태 안내 위젯
+  Widget _seatLegend(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+              color: color, borderRadius: BorderRadius.circular(4)),
+        ),
+        SizedBox(width: 4),
+        Text(label),
+      ],
     );
   }
 }
