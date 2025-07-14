@@ -1,16 +1,40 @@
-# flutter_train_app
+1. 개요
+ - Flutter로 개발된 기차 예매 시뮬레이션 앱으로 출발역과 도착역을 선택하고, 좌석을 예매할 수 있음
+ - 예매 내역을 관리할 수 있음
 
-A new Flutter project.
+2. 주요 기능
+ - 역 선택: 출발역과 도착역 선택 (같은 역 선택 불가)
+ - 좌석 예매: 4열(A, B, C, D) × 10행 좌석 선택 시스템
+ - 예매 내역 관리: 최대 3개까지 예매 가능 => 스와이프로 삭제 가능
+ - 자동 테마: 라이트모드(AM 08:00 ~ PM 19:59), 다크모드(PM 20:00 ~ AM 07:59)
 
-## Getting Started
+3. 제한 및 보안
+ - 예매 3개 초과되면 예매 확인 목록 삭제 후 가능
+ - 중복 예매 방지(출발역/도착역/좌석 조합 중복 예매 불가능)
+ - 삭제 후 재예매 가능
 
-This project is a starting point for a Flutter application.
+4. 구조(lib)
+    main.dart                   # 앱 진입(테마 설정 포함되어 있음)
+    data                        # 예매 데이터 관리
+     + ticket_store.dart
+    models
+     + ticke.dart               # 예매 정보 모듈
+    pages
+     + home_page.dart           # 메인 페이지(출발/도착역 선택, 예매 내역)
+     + station_list_page.dart   # 역 목록 페이지
+     + seat_page.dart           # 좌석 선택 페이지
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+5. 정보
+ - 개발 기간: 2025.07.11(금) ~ 2025.07.14(월)
+ - 주요 해결 사항
+  1) 컴파일 오류: const생성자와 final필드 충돌 해결
+  2) Depercated API: withOpacity -> withCalues 업데이트
+  3) 타입 오류: Cardtheme -> CardthemeData 수정
+  4) 메모리 효율: static const 컴파일 타임 상수 활용, Builder패턴으로 불필요한 호출 방지
+  5) 기능 수정 항목
+     * 예매 내역 3개 초과하면 메시지 팝업 후 좌석 선택 화면으로 이동되는 현상 수정
+     * 다크모드 PM 20시로만 설정되어 있어 세부 설정 변경
+     * 예매 내역이 제한 없이 계속 늘어나지만 화면에 보이지 않았던 현상 수정
+     * 출발/도착역은 각각 다르게 적용되어 중복이 되지 않으나, 좌석은 중복 가능했던 현상 수정
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
