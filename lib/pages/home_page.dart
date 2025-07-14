@@ -5,6 +5,8 @@ import 'seat_page.dart'; // <#2> 좌석 페이지 import
 import '../data/ticket_store.dart'; //<#3> 예매 내역 저장소 import
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -32,14 +34,21 @@ class _HomePageState extends State<HomePage> {
           children: [
             SizedBox(height: 20), // <수정#1> 여유 공간 추가, <수정#4> 20변경
             
-            // 출발/도착역을 감싸는 박스
+            // <도전과제> 출발/도착역을 감싸는 박스 (테마에 맞는 색상 적용)
             Container(
               // height: 200, <수정#5> 고정 높이 지워보기 값은 유지
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24), // <수정#5> 내부 여백 추가
               width: screenWidth * 0.85, // <수정#6> 박스 너비 비율로 조정
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor, // <도전과제> 테마에 맞는 카드 색상
                 borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
+                  ),
+                ],
               ),
               //<#4 UI수정>
               child: Row(
@@ -71,21 +80,24 @@ class _HomePageState extends State<HomePage> {
                         Text('출발역',
                             style: TextStyle(
                                 fontSize: 18, //<수정#6> 16->18 변경
-                                color: Colors.grey,
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7), // <도전과제> 테마에 맞는 텍스트 색상
                                 fontWeight: FontWeight.bold)),
                         SizedBox(height: 4),
                         Text(
                           selectedDeparture ?? '선택',
-                          style: TextStyle(fontSize: 40),//<수정#6> 40->42 변경
+                          style: TextStyle(
+                            fontSize: 40,//<수정#6> 40->42 변경
+                            color: Theme.of(context).textTheme.headlineMedium?.color, // <도전과제> 테마에 맞는 헤드라인 색상
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  //삭제 SizedBox(height: 20), // 출발-도착 사이 세로 선 대체 간격
+                  // <도전과제> 출발-도착 사이 구분선 (테마에 맞는 색상)
                   Container(
                     width: 1,
                     height: 50,
-                    color: Colors.grey[300],//숫자 변경
+                    color: Theme.of(context).dividerColor, // <도전과제> 테마에 맞는 구분선 색상
                   ),
                   SizedBox(height: 20),
                   // 도착역
@@ -113,12 +125,15 @@ class _HomePageState extends State<HomePage> {
                         Text('도착역',
                             style: TextStyle(
                                 fontSize: 18, //<수정#6> 16->18 변경
-                                color: Colors.grey,
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7), // <도전과제> 테마에 맞는 텍스트 색상
                                 fontWeight: FontWeight.bold)),
                         SizedBox(height: 4),
                         Text(
                           selectedArrival ?? '선택',
-                          style: TextStyle(fontSize: 42),//<수정#6> 40->42변경
+                          style: TextStyle(
+                            fontSize: 42,//<수정#6> 40->42변경
+                            color: Theme.of(context).textTheme.headlineMedium?.color, // <도전과제> 테마에 맞는 헤드라인 색상
+                          ),
                         ),
                       ],
                     ),
@@ -127,7 +142,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(height: 40), // 박스와 버튼 사이 간격 <수정#7> 20->40 변경
-            // 좌석 선택 버튼
+            // <추가기능> 좌석 선택 버튼 (최대 3개 제한 포함)
             ElevatedButton(
               onPressed: () {
                 if (selectedDeparture == null || selectedArrival == null) {
@@ -136,6 +151,24 @@ class _HomePageState extends State<HomePage> {
                     SnackBar(content: Text('출발역과 도착역을 모두 선택하세요.')),
                   );
                   return;
+                }
+
+                // <버그수정> 예매내역 3개 초과시 좌석 선택 화면으로 넘어가는 문제 수정 - 최대 3개 제한 체크
+                if (TicketStore().ticketCount >= 3) {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: Text('예매 제한'),
+                      content: Text('3회 이상 예매할 수 없습니다'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text('확인'),
+                        ),
+                      ],
+                    ),
+                  );
+                  return; // <버그수정> 예매내역 3개 초과시 좌석 선택 화면으로 넘어가는 문제 수정 - 다이얼로그 닫기만 하고 좌석 선택 화면으로 이동하지 않음
                 }
 
                 // <#2> 좌석 페이지로 출발/도착역 넘기기
@@ -152,7 +185,6 @@ class _HomePageState extends State<HomePage> {
                   });
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -188,13 +220,64 @@ class _HomePageState extends State<HomePage> {
                           itemCount: tickets.length,
                           itemBuilder: (context, index) {
                             final ticket = tickets[index];
-                        return ListTile(
-                          leading: Icon(Icons.train),
-                          title: Text('${ticket.departure} → ${ticket.arrival}'),
-                          subtitle: Text('좌석: ${ticket.seat}'),
-                        );
-                      },
-                    ),
+                            return Dismissible(
+                              // <추가기능> 스와이프 삭제 기능 - 고유 키 설정
+                              key: Key('ticket_${ticket.departure}_${ticket.arrival}_${ticket.seat}_$index'),
+                              // <추가기능> 스와이프 방향 설정 (오른쪽에서 왼쪽으로만 삭제 가능)
+                              direction: DismissDirection.endToStart,
+                              // <추가기능> 스와이프 시 배경 색상 및 아이콘
+                              background: Container(
+                                color: Colors.red,
+                                alignment: Alignment.centerRight,
+                                padding: EdgeInsets.only(right: 20.0),
+                                child: Icon(
+                                  Icons.delete,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              // <추가기능> 스와이프 시 확인 다이얼로그 표시
+                              confirmDismiss: (direction) async {
+                                return await showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text('예매 내역 삭제'),
+                                      content: Text('정말 예매내역을 삭제하시겠습니까?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(false),
+                                          child: Text('취소'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(true),
+                                          child: Text('확인'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              // <추가기능> 삭제 후 동일 예매할 수 있게 추가 - 삭제 실행
+                              onDismissed: (direction) {
+                                setState(() {
+                                  TicketStore().removeTicket(index);
+                                });
+                                // <추가기능> 삭제 후 동일 예매할 수 있게 추가 - 삭제 완료 메시지
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('예매 내역이 삭제되었습니다'),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                              child: ListTile(
+                                leading: Icon(Icons.train),
+                                title: Text('${ticket.departure} → ${ticket.arrival}'),
+                                subtitle: Text('좌석: ${ticket.seat}'),
+                              ),
+                            );
+                          },
+                        ),
                   ],
                 );
                   }

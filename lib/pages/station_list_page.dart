@@ -6,10 +6,10 @@ class StationListPage extends StatelessWidget {
   final String? excludeStation; // <도전> 제외할 역(출발역 또는 도착역)을 전달받음
 
   const StationListPage({ // <도전수정> const 추가 및 key 명시
-    Key? key,
+    super.key,
     required this.mode,
     this.excludeStation,
-  }) : super(key: key); // <도전수정> StatelessWidget이므로 key 전
+  }); // <도전수정> StatelessWidget이므로 key 전
   // <도전수정> excludeStation이 null이 아니면 해당 역을 제외한 리스트 생성
   static const List<String> allStations = [
     '수서',
@@ -27,6 +27,7 @@ class StationListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // <도전과제> 제외할 역을 필터링하여 목록 생성
     final filteredStations = excludeStation != null
         ? allStations.where((station) => station != excludeStation).toList()
         : allStations; // <도전> 제외된 역 필터링 -> <도전수정>excludeStation이 있으면 필터링 적용
@@ -49,12 +50,16 @@ class StationListPage extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Colors.grey[300]!),
+                  bottom: BorderSide(color: Theme.of(context).dividerColor), // <도전과제> 테마에 맞는 구분선 색상
                 ),
               ),
               child: Text(
                 filteredStations[index],
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 18, 
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.bodyLarge?.color, // <도전과제> 테마에 맞는 텍스트 색상
+                ),
               ),
             ),
           );

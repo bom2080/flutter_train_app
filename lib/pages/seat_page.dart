@@ -1,5 +1,4 @@
 // lib/pages/seat_page.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../models/ticket.dart'; // <#4>예매 정보 모델
 import '../data/ticket_store.dart'; // <#4> 예매 저장소
@@ -8,7 +7,7 @@ class SeatPage extends StatefulWidget {
   final String departure;
   final String arrival;
 
-  SeatPage({required this.departure, required this.arrival});
+  const SeatPage({super.key, required this.departure, required this.arrival});
 
   @override
   State<SeatPage> createState() => _SeatPageState();
@@ -145,14 +144,57 @@ class _SeatPageState extends State<SeatPage> {
                                 ),
                                 TextButton(
                                   onPressed: () {
-                                    TicketStore().addTicket(
-                                      Ticket(
-                                        departure: widget.departure,
-                                        arrival: widget.arrival,
-                                        seat: selectedSeat!,
-                                      ),
+                                    // <추가기능> 예매 추가 시 중복 및 개수 제한 체크
+                                    final ticket = Ticket(
+                                      departure: widget.departure,
+                                      arrival: widget.arrival,
+                                      seat: selectedSeat!,
                                     );
-                                    Navigator.popUntil(context, (route) => route.isFirst);
+                                    
+                                    final success = TicketStore().addTicket(ticket);
+                                    
+                                    if (success) {
+                                      // <추가기능> 성공적으로 예매된 경우 홈으로 이동
+                                      Navigator.popUntil(context, (route) => route.isFirst);
+                                    } else {
+                                      // <추가기능> 실패한 경우 (중복 또는 개수 초과)
+                                      Navigator.pop(context); // 다이얼로그 닫기
+                                      
+                                      // <버그수정> 동일 예매 내역 예외처리 - 중복 예매 시 메시지 표시
+                                      if (TicketStore().tickets.any((t) => 
+                                          t.departure == widget.departure &&
+                                          t.arrival == widget.arrival &&
+                                          t.seat == selectedSeat)) {
+                                        showDialog(
+                                          context: context,
+                                          builder: (_) => AlertDialog(
+                                            title: Text('중복 예매'),
+                                            content: Text('동일 예매내역이 있습니다'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context),
+                                                child: Text('확인'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      } else {
+                                        // <추가기능> 최대 3개 초과 시 메시지 표시
+                                        showDialog(
+                                          context: context,
+                                          builder: (_) => AlertDialog(
+                                            title: Text('예매 제한'),
+                                            content: Text('3회 이상 예매할 수 없습니다'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context),
+                                                child: Text('확인'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
+                                    }
                                   },
                                   child: Text('확인'),
                                 ),
