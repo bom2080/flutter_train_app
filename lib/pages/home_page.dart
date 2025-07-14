@@ -16,7 +16,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width; // <수정#6> 화면 너비
-    double screenHeight = MediaQuery.of(context).size.height; // <수정#6> 화면 높이
 
 
     return Scaffold(
@@ -54,7 +53,10 @@ class _HomePageState extends State<HomePage> {
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => StationListPage(mode: '출발역'),
+                          builder: (_) => StationListPage(
+                            mode: '출발역',
+                            excludeStation: selectedArrival, // <도전> 도착역을 출발역 선택 시 제외
+                          ),
                         ),
                       );
                       if (result != null) {
@@ -93,7 +95,10 @@ class _HomePageState extends State<HomePage> {
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => StationListPage(mode: '도착역'),
+                          builder: (_) => StationListPage(
+                            mode: '도착역',
+                            excludeStation: selectedDeparture, // <도전> 출발역을 도착역 선택 시 제외
+                          ),
                         ),
                       );
                       if (result != null) {
@@ -122,7 +127,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(height: 40), // 박스와 버튼 사이 간격 <수정#7> 20->40 변경
-            
             // 좌석 선택 버튼
             ElevatedButton(
               onPressed: () {
@@ -166,21 +170,24 @@ class _HomePageState extends State<HomePage> {
               SizedBox(height: 40), // 하단 여백
 
               // <#3> 예매 내역 리스트 보여주기
-              if (TicketStore().tickets.isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '예매 내역',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 10),
-                    ListView.builder(
-                      shrinkWrap: true, // <#3> Column 안에서 ListView 사용 시 필요
-                      physics: NeverScrollableScrollPhysics(), // <#3> ScrollView 중첩 방지
-                      itemCount: TicketStore().tickets.length,
-                      itemBuilder: (context, index) {
-                        final ticket = TicketStore().tickets[index];
+              Builder(
+                builder: (context) {
+                  final tickets = TicketStore().tickets;
+                  if (tickets.isNotEmpty) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '예매 내역',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 10),
+                        ListView.builder(
+                          shrinkWrap: true, // <#3> Column 안에서 ListView 사용 시 필요
+                          physics: NeverScrollableScrollPhysics(), // <#3> ScrollView 중첩 방지
+                          itemCount: tickets.length,
+                          itemBuilder: (context, index) {
+                            final ticket = tickets[index];
                         return ListTile(
                           leading: Icon(Icons.train),
                           title: Text('${ticket.departure} → ${ticket.arrival}'),
@@ -189,7 +196,11 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                   ],
-                ),
+                );
+                  }
+                  return SizedBox.shrink();
+                },
+              ),
             ],
           ),
         ),//<수정#2> SingleChildScrollView
